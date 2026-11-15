@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Học thuộc đáp án</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --card:#ffffff; --ink:#1f2328; --muted:#6b7280; --line:#e4e2db;
+    --accent:#2f6f5e; --accent-ink:#fff; --ok:#1f7a45; --okbg:#e5f4ea; --bad:#b3261e; --badbg:#fbe9e7;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#16181a; --card:#212428; --ink:#ececec; --muted:#9aa1ab; --line:#33373d;
+      --accent:#5fb89f; --accent-ink:#0f1a16; --ok:#6fd49a; --okbg:#1a3326; --bad:#ff8a80; --badbg:#3a1f1d;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+  h1{font-size:1.25rem;margin:4px 0 14px}
+  .tabs{display:flex;gap:6px;background:var(--line);padding:4px;border-radius:12px;margin-bottom:18px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--muted);padding:9px 6px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer}
+  .tabs button[aria-selected=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  .panel{display:none}.panel.on{display:block}
+  .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:.9rem;margin-bottom:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;min-height:210px;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;cursor:pointer;user-select:none}
+  .card .q{font-size:1.8rem;font-weight:700}
+  .card .a{font-size:2.6rem;font-weight:800;color:var(--accent)}
+  .card .hint{display:block;margin-top:10px;color:var(--muted);font-size:.85rem;font-weight:400}
+  .row{display:flex;gap:10px;margin-top:14px}
+  .btn{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:12px;border-radius:12px;font:inherit;font-weight:600;cursor:pointer}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.ok{background:var(--okbg);color:var(--ok);border-color:transparent}
+  .btn.bad{background:var(--badbg);color:var(--bad);border-color:transparent}
+  .btn:focus-visible,.tabs button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  input[type=text]{width:100%;padding:14px;font:inherit;font-size:1.3rem;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin-top:14px;text-align:center}
+  .qbox{text-align:center;padding:26px 16px;background:var(--card);border:1px solid var(--line);border-radius:18px}
+  .qbox .q{font-size:1.8rem;font-weight:700}
+  .fb{margin-top:12px;padding:12px;border-radius:12px;font-weight:600;text-align:center;min-height:48px}
+  .fb.ok{background:var(--okbg);color:var(--ok)} .fb.bad{background:var(--badbg);color:var(--bad)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  td{padding:13px 14px;border-bottom:1px solid var(--line);font-size:1.05rem}
+  tr:last-child td{border-bottom:0}
+  td.v{text-align:right;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+  td.v.hide{color:transparent;background:var(--line);cursor:pointer;user-select:none}
+  .small{color:var(--muted);font-size:.85rem;margin-top:10px}
+  .done{text-align:center;padding:30px 10px}
+  .done .big{font-size:2.2rem;font-weight:800}
+  .bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:14px}
+  .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Học thuộc đáp án</h1>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-t="flash">Thẻ ghi nhớ</button>
+    <button role="tab" aria-selected="false" data-t="quiz">Kiểm tra</button>
+    <button role="tab" aria-selected="false" data-t="list">Danh sách</button>
+  </div>
+
+  <section id="flash" class="panel on"></section>
+  <section id="quiz" class="panel"></section>
+  <section id="list" class="panel"></section>
+</div>
+
+<script>
+// ===== DỮ LIỆU (giữ nguyên đúng như người dùng cung cấp) =====
+const DATA = [
+  {q:"skydance",     a:"1,4"},
+  {q:"pickleball",   a:"16"},
+  {q:"tên lửa",      a:"546"},
+  {q:"nhà máy ab",   a:"70,7"},
+  {q:"cứu hỏa",      a:"31,1"},
+  {q:"tấm tôn",      a:"98,8"}
+];
+
+const $ = s => document.querySelector(s);
+const norm = s => parseFloat(String(s).trim().replace(",", "."));
+const shuffle = arr => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ===== Tabs =====
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected", x===b));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on", p.id===b.dataset.t));
+}));
+
+// ===== Thẻ ghi nhớ =====
+(function(){
+  let deck = shuffle(DATA), i = 0, shown = false, known = new Set();
+  const el = $("#flash");
+  function render(){
+    if(deck.length===0){
+      el.innerHTML = `<div class="done"><div class="big">🎉 Đã thuộc hết!</div><p>Bạn đã nhớ cả ${DATA.length} đáp án.</p><button class="btn primary" id="again">Học lại từ đầu</button></div>`;
+      $("#again").onclick=()=>{deck=shuffle(DATA);i=0;shown=false;known.clear();render();};
+      return;
+    }
+    if(i>=deck.length) i=0;
+    const c = deck[i];
+    el.innerHTML = `
+      <div class="meta"><span>Còn ${deck.length} thẻ chưa thuộc</span><span>Đã thuộc ${known.size}/${DATA.length}</span></div>
+      <div class="bar"><i style="width:${known.size/DATA.length*100}%"></i></div>
+      <div class="card" id="card" tabindex="0" role="button" aria-label="Lật thẻ">
+        ${shown ? `<div><div class="a">${esc(c.a)}</div><span class="hint">${esc(c.q)}</span></div>`
+                : `<div><div class="q">${esc(c.q)}</div><span class="hint">Chạm để xem đáp án</span></div>`}
+      </div>
+      <div class="row" style="${shown?'':'display:none'}">
+        <button class="btn bad" id="no">Chưa thuộc</button>
+        <button class="btn ok" id="yes">Đã thuộc</button>
+      </div>`;
+    const flip=()=>{shown=!shown;render();};
+    $("#card").onclick=flip;
+    $("#card").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flip();}};
+    if(shown){
+      $("#yes").onclick=()=>{known.add(c.q);deck.splice(i,1);shown=false;render();};
+      $("#no").onclick=()=>{i=(i+1)%deck.length;shown=false;render();};
+    }
+  }
+  render();
+})();
+
+// ===== Kiểm tra =====
+(function(){
+  let order, i, score, answered;
+  const el = $("#quiz");
+  function start(){order=shuffle(DATA);i=0;score=0;answered=false;render();}
+  function render(){
+    if(i>=order.length){
+      el.innerHTML = `<div class="done"><div class="big">${score}/${order.length}</div><p>${score===order.length?"Hoàn hảo! 🎯":"Làm lại để nhớ chắc hơn nhé."}</p><button class="btn primary" id="re">Làm lại</button></div>`;
+      $("#re").onclick=start; return;
+    }
+    const c = order[i];
+    el.innerHTML = `
+      <div class="meta"><span>Câu ${i+1}/${order.length}</span><span>Đúng: ${score}</span></div>
+      <div class="bar"><i style="width:${i/order.length*100}%"></i></div>
+      <div class="qbox"><div class="q">${esc(c.q)} = ?</div></div>
+      <input type="text" id="ans" inputmode="decimal" autocomplete="off" placeholder="Nhập đáp án" aria-label="Đáp án">
+      <div class="fb" id="fb"></div>
+      <div class="row"><button class="btn primary" id="go">Kiểm tra</button></div>`;
+    const inp=$("#ans"); inp.focus();
+    const go=()=>{
+      if(answered){i++;answered=false;render();return;}
+      if(inp.value.trim()==="") return;
+      const okk = norm(inp.value)===norm(c.a);
+      if(okk) score++;
+      answered=true; inp.disabled=true;
+      $("#fb").className="fb "+(okk?"ok":"bad");
+      $("#fb").textContent = okk ? "Chính xác! ✓" : "Chưa đúng. Đáp án: "+c.a;
+      $("#go").textContent = i+1>=order.length ? "Xem kết quả" : "Câu tiếp theo";
+    };
+    $("#go").onclick=go;
+    inp.onkeydown=e=>{if(e.key==="Enter")go();};
+  }
+  el.addEventListener("keydown",e=>{ if(e.key==="Enter" && answered) $("#go")&&$("#go").click(); });
+  start();
+})();
+
+// ===== Danh sách =====
+(function(){
+  const el=$("#list"); let hidden=false;
+  function render(){
+    el.innerHTML = `
+      <table>${DATA.map((d,k)=>`<tr><td>${esc(d.q)}</td><td class="v ${hidden?'hide':''}" data-k="${k}">${esc(d.a)}</td></tr>`).join("")}</table>
+      <div class="row"><button class="btn primary" id="tg">${hidden?"Hiện đáp án":"Ẩn đáp án để tự nhẩm"}</button></div>
+      <p class="small">${hidden?"Chạm vào ô tối để xem từng đáp án.":"Ẩn cột đáp án rồi tự nhẩm trước khi kiểm tra lại."}</p>`;
+    $("#tg").onclick=()=>{hidden=!hidden;render();};
+    el.querySelectorAll("td.v.hide").forEach(td=>td.onclick=()=>td.classList.remove("hide"));
+  }
+  render();
+})();
+</script>
+</body>
+</html>
